@@ -10,8 +10,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['Inter', 'sans-serif'],
-        headline: ['Inter', 'sans-serif'],
+        body: ['PT Sans', 'sans-serif'],
+        headline: ['Playfair Display', 'serif'],
         code: ['monospace'],
       },
       colors: {
@@ -65,6 +65,22 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        'employee-highlight': {
+          DEFAULT: '#AEC6FF',
+          foreground: '#1E3A8A',
+        },
+        'admin-highlight': {
+          DEFAULT: '#B2FFB2',
+          foreground: '#064E3B',
+        },
+        'college-highlight': {
+          DEFAULT: '#D4AFFF',
+          foreground: '#4C1D95',
+        },
+        'industry-highlight': {
+          DEFAULT: '#D4AFFF',
+          foreground: '#4C1D95',
+        }
       },
       borderRadius: {
         lg: 'var(--radius)',
