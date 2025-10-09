@@ -3,10 +3,12 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Lock, Mail, Phone, User } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, Phone, User as UserIcon } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Logo from '@/components/Logo';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth, useFirestore, setDocumentNonBlocking } from '@/firebase';
 
 const formSchema = z
   .object({
@@ -34,8 +37,11 @@ const formSchema = z
 export default function SignupPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const auth = useAuth();
+  const firestore = useFirestore();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -50,14 +56,34 @@ export default function SignupPage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    // In a real app, you would handle the signup logic here.
-    toast({
-      title: 'Account Created!',
-      description: 'Redirecting you to the dashboard...',
-    });
-    setTimeout(() => router.push('/dashboard'), 2000);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSubmitting(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      const user = userCredential.user;
+
+      const { password, confirmPassword, ...userData } = values;
+      
+      const collectionName = `${values.role.toLowerCase()}s`;
+      const userDocRef = doc(firestore, collectionName, user.uid);
+
+      setDocumentNonBlocking(userDocRef, userData, { merge: true });
+
+      toast({
+        title: 'Account Created!',
+        description: 'Redirecting you to the dashboard...',
+      });
+      router.push('/dashboard');
+    } catch (error: any) {
+      console.error('Signup Error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Uh oh! Something went wrong.',
+        description: error.message || 'There was a problem with your request.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -81,7 +107,7 @@ export default function SignupPage() {
                         <FormLabel>Name</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                            <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                             <Input placeholder="John" {...field} className="pl-10" />
                           </div>
                         </FormControl>
@@ -218,8 +244,8 @@ export default function SignupPage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full font-bold">
-                  Sign Up
+                <Button type="submit" className="w-full font-bold" disabled={isSubmitting}>
+                  {isSubmitting ? 'Signing Up...' : 'Sign Up'}
                 </Button>
               </form>
             </Form>

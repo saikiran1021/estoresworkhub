@@ -1,14 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Bell,
   ChevronDown,
   LayoutDashboard,
   LogOut,
-  PanelLeft,
-  Settings,
   Shield,
   Users,
 } from 'lucide-react';
@@ -28,7 +26,6 @@ import {
   Sidebar,
   SidebarContent,
   SidebarHeader,
-  SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -36,6 +33,9 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { useAuth, useUser } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import { useEffect } from 'react';
 
 const NavItem = ({
   href,
@@ -62,11 +62,20 @@ const NavItem = ({
 
 function DashboardHeader() {
   const { isMobile } = useSidebar();
+  const auth = useAuth();
+  const { user } = useUser();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/');
+  };
+
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
       {isMobile && <SidebarTrigger />}
       <div className="flex-1">
-        <h1 className="font-headline text-xl font-semibold text-primary">
+        <h1 className="font-headline text-xl font-semibold capitalize text-primary">
           {usePathname().split('/').pop()?.replace('-', ' ') || 'Dashboard'}
         </h1>
       </div>
@@ -79,27 +88,25 @@ function DashboardHeader() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2 px-2">
               <Avatar className="h-8 w-8">
-                <AvatarImage src="https://picsum.photos/seed/admin/100/100" alt="Admin" data-ai-hint="man portrait"/>
-                <AvatarFallback>AD</AvatarFallback>
+                <AvatarImage src={user?.photoURL ?? `https://picsum.photos/seed/${user?.uid}/100/100`} alt={user?.displayName ?? 'User'} data-ai-hint="person portrait"/>
+                <AvatarFallback>{user?.email?.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
-              <span className="hidden md:inline">Admin User</span>
+              <span className="hidden md:inline">{user?.displayName || user?.email}</span>
               <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Settings</span>
+            <DropdownMenuItem disabled>
+              <Users className="mr-2 h-4 w-4" />
+              <span>Profile</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <Link href="/" passHref>
-              <DropdownMenuItem>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
-              </DropdownMenuItem>
-            </Link>
+            <DropdownMenuItem onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Log out</span>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -108,6 +115,26 @@ function DashboardHeader() {
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.replace('/');
+    }
+  }, [user, isUserLoading, router]);
+
+  if (isUserLoading || !user) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+        <div className="w-full max-w-md text-center">
+          <Logo />
+          <h1 className="mt-4 animate-pulse text-lg">Loading Dashboard...</h1>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">

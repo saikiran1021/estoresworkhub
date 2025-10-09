@@ -9,9 +9,8 @@ const getImage = (id: string) => {
     }
 }
 
-export const mockUsers: User[] = [
+export const mockUsers: Omit<User, 'id'>[] = [
   {
-    id: 1,
     name: 'Ava',
     surname: 'Johnson',
     phone: '202-555-0184',
@@ -21,7 +20,6 @@ export const mockUsers: User[] = [
     avatarHint: getImage('avatar1').hint,
   },
   {
-    id: 2,
     name: 'Liam',
     surname: 'Smith',
     phone: '202-555-0196',
@@ -31,7 +29,6 @@ export const mockUsers: User[] = [
     avatarHint: getImage('avatar2').hint,
   },
   {
-    id: 3,
     name: 'Noah',
     surname: 'Williams',
     phone: '202-555-0161',
@@ -41,7 +38,6 @@ export const mockUsers: User[] = [
     avatarHint: getImage('avatar3').hint,
   },
   {
-    id: 4,
     name: 'Olivia',
     surname: 'Brown',
     phone: '202-555-0173',
@@ -51,7 +47,6 @@ export const mockUsers: User[] = [
     avatarHint: getImage('avatar4').hint,
   },
   {
-    id: 5,
     name: 'Emma',
     surname: 'Jones',
     phone: '202-555-0182',
@@ -61,7 +56,6 @@ export const mockUsers: User[] = [
     avatarHint: getImage('avatar5').hint,
   },
   {
-    id: 6,
     name: 'James',
     surname: 'Garcia',
     phone: '202-555-0154',
@@ -71,7 +65,6 @@ export const mockUsers: User[] = [
     avatarHint: getImage('avatar6').hint,
   },
   {
-    id: 7,
     name: 'Sophia',
     surname: 'Miller',
     phone: '202-555-0112',
@@ -81,7 +74,6 @@ export const mockUsers: User[] = [
     avatarHint: getImage('avatar7').hint,
   },
   {
-    id: 8,
     name: 'Benjamin',
     surname: 'Davis',
     phone: '202-555-0139',

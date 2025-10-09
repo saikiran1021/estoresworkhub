@@ -1,4 +1,4 @@
-import { mockUsers } from "@/lib/data";
+'use client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -7,8 +7,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getRoleClassNames } from "@/lib/utils";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection } from "firebase/firestore";
+import type { User } from "@/lib/types";
 
 export default function EmployeeDirectoryPage() {
+    const firestore = useFirestore();
+    const employeesQuery = useMemoFirebase(() => collection(firestore, 'employees'), [firestore]);
+    const { data: users, isLoading } = useCollection<User>(employeesQuery);
+
     return (
         <Card className="shadow-lg">
             <CardHeader>
@@ -31,12 +38,13 @@ export default function EmployeeDirectoryPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {mockUsers.map((user) => (
+                        {isLoading && <TableRow><TableCell colSpan={4} className="text-center">Loading...</TableCell></TableRow>}
+                        {!isLoading && users && users.map((user) => (
                             <TableRow key={user.id}>
                                 <TableCell>
                                     <div className="flex items-center gap-3">
                                         <Avatar>
-                                            <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint={user.avatarHint} />
+                                            <AvatarImage src={`https://picsum.photos/seed/${user.id}/100/100`} alt={user.name} />
                                             <AvatarFallback>{user.name.charAt(0)}{user.surname.charAt(0)}</AvatarFallback>
                                         </Avatar>
                                         <div className="font-medium">{user.name} {user.surname}</div>
@@ -51,6 +59,7 @@ export default function EmployeeDirectoryPage() {
                                 </TableCell>
                             </TableRow>
                         ))}
+                         {!isLoading && !users?.length && <TableRow><TableCell colSpan={4} className="text-center">No employees found.</TableCell></TableRow>}
                     </TableBody>
                 </Table>
             </CardContent>

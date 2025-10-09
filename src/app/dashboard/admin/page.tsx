@@ -1,4 +1,4 @@
-import { mockUsers } from "@/lib/data";
+'use client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,8 +9,25 @@ import { MoreHorizontal, Pencil, PlusCircle, Search, Trash2 } from "lucide-react
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { getRoleClassNames } from "@/lib/utils";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, query, where } from "firebase/firestore";
+import type { User } from "@/lib/types";
 
 export default function AdminPanelPage() {
+    const firestore = useFirestore();
+
+    const employeesQuery = useMemoFirebase(() => collection(firestore, 'employees'), [firestore]);
+    const adminsQuery = useMemoFirebase(() => collection(firestore, 'admins'), [firestore]);
+    const collegesQuery = useMemoFirebase(() => collection(firestore, 'colleges'), [firestore]);
+    const industriesQuery = useMemoFirebase(() => collection(firestore, 'industries'), [firestore]);
+
+    const { data: employees } = useCollection<User>(employeesQuery);
+    const { data: admins } = useCollection<User>(adminsQuery);
+    const { data: colleges } = useCollection<User>(collegesQuery);
+    const { data: industries } = useCollection<User>(industriesQuery);
+    
+    const allUsers = [...(employees || []), ...(admins || []), ...(colleges || []), ...(industries || [])];
+
     return (
         <Card className="shadow-lg">
             <CardHeader>
@@ -43,12 +60,12 @@ export default function AdminPanelPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {mockUsers.map((user) => (
+                        {allUsers.map((user) => (
                             <TableRow key={user.id}>
                                 <TableCell>
                                     <div className="flex items-center gap-3">
                                         <Avatar>
-                                            <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint={user.avatarHint} />
+                                            <AvatarImage src={`https://picsum.photos/seed/${user.id}/100/100`} alt={user.name} />
                                             <AvatarFallback>{user.name.charAt(0)}{user.surname.charAt(0)}</AvatarFallback>
                                         </Avatar>
                                         <div>
