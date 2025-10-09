@@ -1,0 +1,174 @@
+/**
+ * @fileoverview Firestore Security Rules for eStores WorkHub portal.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a role-based access control model using separate
+ * Firestore collections for different user roles (employees, admins, colleges, industries).
+ * Each user can only access their own document. Listing of users within
+ * a specific role collection is allowed for authenticated users.
+ *
+ * Data Structure:
+ * - /employees/{employeeId}: Stores employee user data.
+ * - /admins/{adminId}: Stores administrator user data.
+ * - /colleges/{collegeId}: Stores college user data.
+ * - /industries/{industryId}: Stores industry user data.
+ *
+ * Key Security Decisions:
+ * - Users can only read and write their own documents.
+ * - Listing is allowed within role-specific collections.
+ * - Data validation is minimal, focusing on path consistency.
+ *
+ * Denormalization for Authorization:
+ * - The user's `id` is used as the document ID, enabling path-based
+ *   authorization (isOwner(userId)). This avoids the need for additional
+ *   reads to determine user identity or role.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Secures the 'employees' collection, allowing employees to manage their own data.
+     * @path /employees/{employeeId}
+     * @allow (create) - An employee with ID 'employee123' can create a document at /employees/employee123 if authenticated as 'employee123'.
+     * @allow (get) - An employee with ID 'employee123' can get their document if authenticated as 'employee123'.
+     * @allow (update) - An employee with ID 'employee123' can update their document if authenticated as 'employee123'.
+     * @allow (delete) - An employee with ID 'employee123' can delete their document if authenticated as 'employee123'.
+     * @allow (list) - Any authenticated user can list documents in the 'employees' collection.
+     * @deny (create) - An employee with ID 'employee123' cannot create a document at /employees/employee456.
+     * @deny (update) - An employee with ID 'employee123' cannot update the document at /employees/employee456.
+     * @deny (delete) - An employee with ID 'employee123' cannot delete the document at /employees/employee456.
+     * @principle Enforces document ownership for writes, allows listing all employee documents.
+     */
+    match /employees/{employeeId} {
+      // Helper function to check if the user is signed in
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      // Helper function to check if the user is the owner of the document
+      function isOwner(employeeId) {
+        return request.auth.uid == employeeId;
+      }
+
+      // Helper function to check if the user is the owner of the existing document
+      function isExistingOwner(employeeId) {
+        return isOwner(employeeId) && resource != null;
+      }
+
+      allow get: if isSignedIn() && isOwner(employeeId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isOwner(employeeId) && request.resource.data.id == employeeId;
+      allow update: if isExistingOwner(employeeId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(employeeId);
+    }
+
+    /**
+     * @description Secures the 'admins' collection, allowing admins to manage their own data.
+     * @path /admins/{adminId}
+     * @allow (create) - An admin with ID 'admin123' can create a document at /admins/admin123 if authenticated as 'admin123'.
+     * @allow (get) - An admin with ID 'admin123' can get their document if authenticated as 'admin123'.
+     * @allow (update) - An admin with ID 'admin123' can update their document if authenticated as 'admin123'.
+     * @allow (delete) - An admin with ID 'admin123' can delete their document if authenticated as 'admin123'.
+     * @allow (list) - Any authenticated user can list documents in the 'admins' collection.
+     * @deny (create) - An admin with ID 'admin123' cannot create a document at /admins/admin456.
+     * @deny (update) - An admin with ID 'admin123' cannot update the document at /admins/admin456.
+     * @deny (delete) - An admin with ID 'admin123' cannot delete the document at /admins/admin456.
+     * @principle Enforces document ownership for writes, allows listing all admin documents.
+     */
+    match /admins/{adminId} {
+      // Helper function to check if the user is signed in
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      // Helper function to check if the user is the owner of the document
+      function isOwner(adminId) {
+        return request.auth.uid == adminId;
+      }
+
+      // Helper function to check if the user is the owner of the existing document
+      function isExistingOwner(adminId) {
+        return isOwner(adminId) && resource != null;
+      }
+
+      allow get: if isSignedIn() && isOwner(adminId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isOwner(adminId) && request.resource.data.id == adminId;
+      allow update: if isExistingOwner(adminId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(adminId);
+    }
+
+    /**
+     * @description Secures the 'colleges' collection, allowing colleges to manage their own data.
+     * @path /colleges/{collegeId}
+     * @allow (create) - A college with ID 'college123' can create a document at /colleges/college123 if authenticated as 'college123'.
+     * @allow (get) - A college with ID 'college123' can get their document if authenticated as 'college123'.
+     * @allow (update) - A college with ID 'college123' can update their document if authenticated as 'college123'.
+     * @allow (delete) - A college with ID 'college123' can delete their document if authenticated as 'college123'.
+     * @allow (list) - Any authenticated user can list documents in the 'colleges' collection.
+     * @deny (create) - A college with ID 'college123' cannot create a document at /colleges/college456.
+     * @deny (update) - A college with ID 'college123' cannot update the document at /colleges/college456.
+     * @deny (delete) - A college with ID 'college123' cannot delete the document at /colleges/college456.
+     * @principle Enforces document ownership for writes, allows listing all college documents.
+     */
+    match /colleges/{collegeId} {
+      // Helper function to check if the user is signed in
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      // Helper function to check if the user is the owner of the document
+      function isOwner(collegeId) {
+        return request.auth.uid == collegeId;
+      }
+
+      // Helper function to check if the user is the owner of the existing document
+      function isExistingOwner(collegeId) {
+        return isOwner(collegeId) && resource != null;
+      }
+
+      allow get: if isSignedIn() && isOwner(collegeId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isOwner(collegeId) && request.resource.data.id == collegeId;
+      allow update: if isExistingOwner(collegeId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(collegeId);
+    }
+
+    /**
+     * @description Secures the 'industries' collection, allowing industries to manage their own data.
+     * @path /industries/{industryId}
+     * @allow (create) - An industry with ID 'industry123' can create a document at /industries/industry123 if authenticated as 'industry123'.
+     * @allow (get) - An industry with ID 'industry123' can get their document if authenticated as 'industry123'.
+     * @allow (update) - An industry with ID 'industry123' can update their document if authenticated as 'industry123'.
+     * @allow (delete) - An industry with ID 'industry123' can delete their document if authenticated as 'industry123'.
+     * @allow (list) - Any authenticated user can list documents in the 'industries' collection.
+     * @deny (create) - An industry with ID 'industry123' cannot create a document at /industries/industry456.
+     * @deny (update) - An industry with ID 'industry123' cannot update the document at /industries/industry456.
+     * @deny (delete) - An industry with ID 'industry123' cannot delete the document at /industries/industry456.
+     * @principle Enforces document ownership for writes, allows listing all industry documents.
+     */
+    match /industries/{industryId} {
+      // Helper function to check if the user is signed in
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      // Helper function to check if the user is the owner of the document
+      function isOwner(industryId) {
+        return request.auth.uid == industryId;
+      }
+
+      // Helper function to check if the user is the owner of the existing document
+      function isExistingOwner(industryId) {
+        return isOwner(industryId) && resource != null;
+      }
+
+      allow get: if isSignedIn() && isOwner(industryId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isOwner(industryId) && request.resource.data.id == industryId;
+      allow update: if isExistingOwner(industryId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(industryId);
+    }
+  }
+}

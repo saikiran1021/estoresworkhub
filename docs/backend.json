@@ -1,0 +1,120 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user account within the eStores WorkHub portal.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The user's first name."
+        },
+        "surname": {
+          "type": "string",
+          "description": "The user's last name."
+        },
+        "phone": {
+          "type": "string",
+          "description": "The user's phone number."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address.",
+          "format": "email"
+        },
+        "role": {
+          "type": "string",
+          "description": "The user's role within the system (e.g., Employee, Admin, College, Industry)."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "surname",
+        "phone",
+        "email",
+        "role"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "employees/{employeeId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores employee user data. The document ID is the user's ID.",
+          "params": [
+            {
+              "name": "employeeId",
+              "description": "The unique identifier for the employee."
+            }
+          ]
+        }
+      },
+      {
+        "path": "admins/{adminId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores administrator user data. The document ID is the user's ID.",
+          "params": [
+            {
+              "name": "adminId",
+              "description": "The unique identifier for the administrator."
+            }
+          ]
+        }
+      },
+      {
+        "path": "colleges/{collegeId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores college user data. The document ID is the user's ID.",
+          "params": [
+            {
+              "name": "collegeId",
+              "description": "The unique identifier for the college user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "industries/{industryId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores industry user data. The document ID is the user's ID.",
+          "params": [
+            {
+              "name": "industryId",
+              "description": "The unique identifier for the industry user."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to store user data with role-based access control.  It uses separate collections for each role ('employees', 'admins', 'colleges', 'industries') mirroring the MySQL table structure described in the user request. This structural segregation (Strategy B) simplifies security rules as all documents within a role-specific collection have identical access requirements. Authorization Independence (Strategy A) is achieved because each user document contains all necessary data (including role) without needing to access other documents to determine authorization.  QAPs are supported because listing users within a specific role collection is secure, as the collection itself defines the access privilege. The user's `id` field is used as the document ID for efficient retrieval and management."
+  }
+}
